@@ -8,3 +8,4 @@ __pycache__
 # CDK asset staging directory
 .cdk.staging
 cdk.out
+/.idea/gbc_prototype_1.iml

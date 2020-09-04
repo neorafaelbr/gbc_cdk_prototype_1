@@ -56,7 +56,8 @@ class GbcPrototype1Stack(core.Stack):
         main_bucket = s3.Bucket(
             self, 'new_bucket_id',
             bucket_name=f'gbc-analytics-prototype-1-cdk-{gbc_environment}',
-            versioned=True
+            versioned=True,
+            encryption=s3.BucketEncryption.S3_MANAGED
         )
 
         target_lambda = s3_notif.LambdaDestination(my_lambda)
