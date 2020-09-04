@@ -19,7 +19,14 @@ setuptools.setup(
     packages=setuptools.find_packages(where="gbc_prototype_1"),
 
     install_requires=[
-        "aws-cdk.core==1.61.1",
+        "aws-cdk.core",
+        "aws-cdk.aws_iam",
+        "aws-cdk.aws_sqs",
+        "aws-cdk.aws_sns",
+        "aws-cdk.aws_sns_subscriptions",
+        "aws-cdk.aws_s3",
+        "aws_cdk.aws_ec2",
+        "aws_cdk.aws_s3_notifications"
     ],
 
     python_requires=">=3.6",
