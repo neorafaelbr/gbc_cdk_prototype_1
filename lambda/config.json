@@ -1,8 +1,8 @@
 {
     "aws_region": "ca-central-1",
     "redshift": {
-        "table_name": "svropor",        
-        "sql": "DROP TABLE if exists public.svropor;\n                CREATE TABLE public.svropor(   \n                  PROGRAM_CODE varchar(4),  \n                  TERM_CODE varchar(6),  \n                  SEMESTER varchar(3), \n                  DOM_INT varchar(4), \n                  DAY1 smallint,\n                  OFFERS smallint,\n                  ACCEPTANCE smallint,\n                  PRIMARY KEY (PROGRAM_CODE, TERM_CODE, SEMESTER, DOM_INT)\n                )\n                SORTKEY(TERM_CODE, PROGRAM_CODE, SEMESTER)\n                ;\n                COPY public.svropor FROM 's3://gbc-analytics-staging-devl/application/svropor_banner/svropor_banner.csv'\n                credentials 'aws_access_key_id={access_key_id};aws_secret_access_key={secret_access_key}'\n                delimiter ',' region 'ca-central-1' csv IGNOREHEADER 1;                \n                commit;" 
+        "table_name": "start_semester_fact",
+        "sql": "DROP TABLE if exists public.start_semester_fact;\nCREATE TABLE public.start_semester_fact(\n    program_code varchar(4),    \n    semester varchar(2),\n    start_semester_flag char(1)   \n)\nSORTKEY(program_code)\n;\nCOPY public.start_semester_fact from 's3://gbc-analytics-staging-devl/application/start_semester_list/start_semester_list.csv'\ncredentials 'aws_access_key_id={access_key_id};aws_secret_access_key={secret_access_key}'\ndelimiter ',' region 'ca-central-1' csv IGNOREHEADER 1;\ncommit;"
     },
     "sns": {
         "topicARN": "arn:aws:sns:ca-central-1:828661178764:DEVL-Messenger"
@@ -11,5 +11,6 @@
         "redshift":  "DEVL/REDSHIFT",
         "agent": "DEVL/AGENT"
     },
-    "comments": "Load config for svropor_banner"
+    "file_to_load": "start_semester_list.csv",
+    "comments": "Load config for start_semester_list"
 }

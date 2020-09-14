@@ -28,20 +28,31 @@ def lambda_handler(event, context):
     s3 = boto3.client('s3')
 
     try:
+        flag_config_file_exists = False
+        flag_connection_created = False
+
         # Get info from triggered event
-        temp1 = event["Records"][0]["s3"]["object"]["key"].split('/')
-        temp1.pop()
+        key = event["Records"][0]["s3"]["object"]["key"]
+        temp1 = key.split('/')
+        file_uploaded = temp1.pop()
+        print(f'File uploaded: {file_uploaded}')
         temp1.append('config.json')
         config_file = '/'.join(temp1)
         bucket_name = event["Records"][0]["s3"]["bucket"]["name"]
-        print(f'Config File: {config_file}')
+        print(f'Expected config file: {config_file}')
         print(f'Bucket: {bucket_name}')
 
         # Get config file and prepare to use it
         s3.download_file(bucket_name, config_file, '/tmp/config.json')
+        flag_config_file_exists = True
         print(f'File Downloaded')
         with open('/tmp/config.json', 'r') as open_file:
             data = json.load(open_file)
+        # Check if the uploaded file is the one to be loaded
+        if file_uploaded != data['file_to_load']:
+            print('Uploaded file is not meant to be loaded, check config.json if it is incorrect')
+            return "Success!"
+
         region = data['aws_region']
         db_credentials = data['secret_manager']['redshift']
         aws_credentials = data['secret_manager']['agent']
@@ -67,8 +78,9 @@ def lambda_handler(event, context):
             print(f'SQL: {sql}')
 
             # Connect to Redshift
-            con = psycopg2.connect(user=db['username'], password=db['password'], host=db['host'], port=db['port'],
-                                   dbname=db['dbName'])
+            conn = psycopg2.connect(user=db['username'], password=db['password'], host=db['host'], port=db['port'],
+                                    dbname=db['dbName'])
+            flag_connection_created = True
 
             # Timestamp last_refresh table
             local_tz = pytz.timezone("America/Toronto")
@@ -78,9 +90,10 @@ def lambda_handler(event, context):
                                 and exists (select 1 from last_refreshed where table_name='{tableName}');
                             insert into last_refreshed values ('{tableName}', '{timestamp}');
                             '''
-            cursor = con.cursor()
+            cursor = conn.cursor()
             cursor.execute(sql)
             cursor.execute(sql_timestamp)
+            conn.close()
 
             # Publish a simple message to the specified SNS topic
             response = sns.publish(
@@ -90,7 +103,16 @@ def lambda_handler(event, context):
             )
             print(response)
     except Exception as e:
+        if not (flag_config_file_exists):
+            print('Nothing to do! The config.json does not exist')
+            return "Success!"
+
+        if flag_connection_created:
+            print('Closing connection to Redshift...')
+            conn.close()
+
         print("Loading Exception: {}".format(str(e)))
+
         response = sns.publish(
             TopicArn=sns_topic,
             Message=f'Loading Exception: {str(e)}',
