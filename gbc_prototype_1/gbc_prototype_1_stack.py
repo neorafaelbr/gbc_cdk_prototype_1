@@ -20,7 +20,7 @@ class GbcPrototype1Stack(core.Stack):
 
         # Define location of lambda deployment packages:
         bucket_source = s3.Bucket.from_bucket_name(self, 'bucket_source_id', bucket_name='gbc-lambda')
-        generic_loader = _lambda.S3Code(bucket_source, key='generic-loader/Archive.zip')
+        generic_loader = _lambda.S3Code(bucket_source, key='generic-loader/generic-loader-test2.zip')
 
         # Define attributes for the networking part:
         _vpc = ec2.Vpc.from_vpc_attributes(
@@ -61,7 +61,7 @@ class GbcPrototype1Stack(core.Stack):
         )
 
         target_lambda = s3_notif.LambdaDestination(my_lambda)
-        key_filter_1 = s3.NotificationKeyFilter(prefix='rafael-test/')
+        key_filter_1 = s3.NotificationKeyFilter(prefix='cdk-test/')
         main_bucket.add_event_notification(
             s3.EventType.OBJECT_CREATED,
             target_lambda,
